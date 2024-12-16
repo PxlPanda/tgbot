@@ -5,8 +5,12 @@ meta:
     version: "3.12"
 
 build:
-  dockerfile: Dockerfile
+  requirementsPath: requirements.txt
+  additionalFiles:
+    - quest_bot.py
+    - config.json
 
 run:
-  command: cd /app && python quest_bot.py
+  workdir: /app
+  scriptName: quest_bot.py
   containerPort: 80
