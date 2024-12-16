@@ -2,9 +2,9 @@ meta:
   environment: python
   toolchain:
     name: pip
-    version: "3.8"
+    version: "3.12"
 build:
-  requirementsPath: requirements.txt
+  requirementsPath: ngbot/ngbot/requirements.txt
 run:
-  persistenceMount: /app/config.json
-  scriptName: quest_bot.py
+  containerPort: 80
+  scriptName: ngbot/ngbot/quest_bot.py
