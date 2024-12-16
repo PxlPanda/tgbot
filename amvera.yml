@@ -5,11 +5,4 @@ meta:
     version: "3.12"
 
 build:
-  requirementsPath: requirements.txt
-  additionalFiles:
-    - quest_bot.py
-    - config.json
-
-run:
-  scriptName: quest_bot.py
-  containerPort: 80
+  dockerfile: Dockerfile
