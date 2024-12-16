@@ -6,7 +6,8 @@ meta:
 build:
   requirementsPath: requirements.txt
 run:
-  scriptName: quest_bot.py
+  command: python
+  args: quest_bot.py
   env:
     - name: PYTHONUNBUFFERED
       value: "1"
