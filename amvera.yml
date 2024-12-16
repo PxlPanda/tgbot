@@ -3,14 +3,9 @@ meta:
   toolchain:
     name: pip
     version: "3.12"
-
 build:
   requirementsPath: requirements.txt
-  additionalFiles:
-    - quest_bot.py
-    - config.json
-
 run:
-  workdir: /app
-  scriptName: quest_bot.py
+  persistenceMount: /tgbot/config.json
   containerPort: 80
+  scriptName: quest_bot.py
