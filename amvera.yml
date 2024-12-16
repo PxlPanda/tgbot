@@ -6,6 +6,6 @@ meta:
 build:
   requirementsPath: requirements.txt
 run:
-  persistenceMount: /tgbot/config.json
+  persistenceMount: /app/config.json
   containerPort: 80
-  scriptName: quest_bot.py
+  command: python /app/quest_bot.py
