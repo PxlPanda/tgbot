@@ -6,5 +6,5 @@ meta:
 build:
   requirementsPath: requirements.txt
 run:
-  persistenceMount: /ngbot/config.json
-  scriptName: ngbot/quest_bot.py
+  persistenceMount: /app/config.json
+  scriptName: quest_bot.py
