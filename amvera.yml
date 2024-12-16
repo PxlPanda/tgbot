@@ -5,11 +5,8 @@ meta:
     version: "3.12"
 build:
   requirementsPath: requirements.txt
-  artifacts:
-    - source: quest_bot.py
-      destination: /app/quest_bot.py
-    - source: config.json
-      destination: /app/config.json
+  additionalFiles:
+    - quest_bot.py
+    - config.json
 run:
-  command: cd /app && python quest_bot.py
-  containerPort: "80"
+  command: ls -la && pwd && python quest_bot.py
