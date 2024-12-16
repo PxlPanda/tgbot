@@ -6,3 +6,7 @@ meta:
 
 build:
   dockerfile: Dockerfile
+
+run:
+  command: cd /app && python quest_bot.py
+  containerPort: 80
