@@ -7,6 +7,5 @@ meta:
 build:
   requirementsPath: requirements.txt
 run:
-  scriptName: quest_bot.py
-  command: ls -la && python quest_bot.py
+  command: mkdir -p /app && cp -f quest_bot.py config.json /app/ && cd /app && ls -la && python quest_bot.py
   containerPort: 80
