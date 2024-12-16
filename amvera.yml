@@ -4,10 +4,11 @@ meta:
     name: pip
     version: "3.12"
 build:
-  requirementsPath: requirements.txt
+  requirementsPath: ./requirements.txt
 run:
   command: python
-  args: quest_bot.py
+  args: ./quest_bot.py
+  workingDir: .
   env:
     - name: PYTHONUNBUFFERED
       value: "1"
