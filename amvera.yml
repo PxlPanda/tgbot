@@ -7,3 +7,6 @@ build:
   requirementsPath: requirements.txt
 run:
   scriptName: quest_bot.py
+  env:
+    - name: PYTHONUNBUFFERED
+      value: "1"

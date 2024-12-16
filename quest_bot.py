@@ -241,16 +241,15 @@ class QuestBot:
                 )
 
 def main() -> None:
-    # Создаем экземпляр бота
-    bot = QuestBot()
-    
+    print("Script started")
+    print("Starting bot...")
     try:
-        # Инициализируем updater с clean=True для очистки предыдущих сессий
         updater = Updater("8135956322:AAEwpxa3g9XujJO6z7RQ-pJqMp-EL7PwjbE", use_context=True)
-
-        # Получаем диспетчер
+        print("Updater created successfully")
+        
         dp = updater.dispatcher
-
+        print("Dispatcher initialized")
+        
         # Добавляем обработчик ошибок
         def error_callback(update, context):
             logger.error(f'Update "{update}" caused error "{context.error}"')
@@ -258,16 +257,16 @@ def main() -> None:
         dp.add_error_handler(error_callback)
 
         # Добавляем обработчики команд
-        dp.add_handler(CommandHandler("start", bot.start))
-        dp.add_handler(CommandHandler("help", bot.help_command))
-        dp.add_handler(CommandHandler("list_scheduled", bot.list_scheduled_messages))
-        dp.add_handler(CommandHandler("cancel_scheduled", bot.cancel_scheduled_message))
+        dp.add_handler(CommandHandler("start", QuestBot().start))
+        dp.add_handler(CommandHandler("help", QuestBot().help_command))
+        dp.add_handler(CommandHandler("list_scheduled", QuestBot().list_scheduled_messages))
+        dp.add_handler(CommandHandler("cancel_scheduled", QuestBot().cancel_scheduled_message))
 
         # Создаем обработчик диалога для отправки задания
         task_conv_handler = ConversationHandler(
-            entry_points=[CommandHandler('send_task', bot.send_task)],
+            entry_points=[CommandHandler('send_task', QuestBot().send_task)],
             states={
-                WAITING_FOR_TASK: [MessageHandler(Filters.text & ~Filters.command, bot.process_task)],
+                WAITING_FOR_TASK: [MessageHandler(Filters.text & ~Filters.command, QuestBot().process_task)],
             },
             fallbacks=[],
         )
@@ -275,23 +274,24 @@ def main() -> None:
 
         # Создаем обработчик диалога для планирования сообщений
         schedule_conv_handler = ConversationHandler(
-            entry_points=[CommandHandler('schedule_message', bot.schedule_message)],
+            entry_points=[CommandHandler('schedule_message', QuestBot().schedule_message)],
             states={
-                WAITING_FOR_SCHEDULE_MESSAGE: [MessageHandler(Filters.text & ~Filters.command, bot.save_scheduled_message)],
-                WAITING_FOR_SCHEDULE_TIME: [MessageHandler(Filters.text & ~Filters.command, bot.process_schedule_time)],
+                WAITING_FOR_SCHEDULE_MESSAGE: [MessageHandler(Filters.text & ~Filters.command, QuestBot().save_scheduled_message)],
+                WAITING_FOR_SCHEDULE_TIME: [MessageHandler(Filters.text & ~Filters.command, QuestBot().process_schedule_time)],
             },
             fallbacks=[],
         )
         dp.add_handler(schedule_conv_handler)
 
         # Обработчик всех остальных сообщений
-        dp.add_handler(MessageHandler(Filters.all & ~Filters.command, bot.handle_player_message))
+        dp.add_handler(MessageHandler(Filters.all & ~Filters.command, QuestBot().handle_player_message))
 
-        # Запускаем бота
+        print("Starting polling...")
         updater.start_polling()
+        print("Bot is running!")
         updater.idle()
     except Exception as e:
-        logger.error(f"Ошибка запуска бота: {e}")
+        print(f"Error starting bot: {e}")
 
 if __name__ == '__main__':
     main()
