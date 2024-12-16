@@ -3,10 +3,3 @@ meta:
   toolchain:
     name: pip
     version: "3.12"
-build:
-  requirementsPath: requirements.txt
-  additionalFiles:
-    - quest_bot.py
-    - config.json
-run:
-  command: ls -la && pwd && python quest_bot.py
