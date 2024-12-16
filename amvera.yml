@@ -6,6 +6,5 @@ meta:
 build:
   requirementsPath: requirements.txt
 run:
-  persistenceMount: /tgbot/config.json
-  containerPort: 80
-  scriptName: ngbot/quest_bot.py
+  persistenceMount: /ngbot/config.json
+  scriptName: ngbot/py quest_bot.py
