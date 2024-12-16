@@ -1,15 +1,21 @@
 FROM python:3.12-slim
 
-# Копируем в корень
-COPY quest_bot.py .
-COPY config.json .
-COPY requirements.txt .
-
-# Показываем где мы и что тут есть
-RUN pwd && ls -la
+# Сначала копируем файлы в корень
+COPY quest_bot.py quest_bot.py
+COPY config.json config.json
+COPY requirements.txt requirements.txt
 
 # Устанавливаем зависимости
 RUN pip install -r requirements.txt
 
-# Запускаем из текущей директории
-CMD ["python", "./quest_bot.py"]
+# Создаем и переходим в /app ПОСЛЕ копирования файлов
+RUN mkdir -p /app
+RUN cp quest_bot.py /app/ && \
+    cp config.json /app/ && \
+    cp requirements.txt /app/
+
+# Показываем содержимое обоих мест
+RUN echo "=== Root ===" && ls -la && echo "=== /app ===" && ls -la /app
+
+WORKDIR /app
+CMD ["python", "quest_bot.py"]
