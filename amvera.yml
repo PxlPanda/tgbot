@@ -3,3 +3,9 @@ meta:
   toolchain:
     name: pip
     version: "3.12"
+
+build:
+  requirementsPath: requirements.txt
+
+run:
+  command: mkdir -p /app && cp quest_bot.py config.json /app/ && cd /app && python quest_bot.py
