@@ -4,10 +4,15 @@ meta:
     name: pip
     version: "3.12"
 build:
-  requirementsPath: ./requirements.txt
+  requirementsPath: requirements.txt
+  artifacts:
+    - source: quest_bot.py
+      destination: /app/quest_bot.py
+    - source: config.json
+      destination: /app/config.json
 run:
   command: python
-  args: ./quest_bot.py
+  args: /app/quest_bot.py
   workingDir: .
   env:
     - name: PYTHONUNBUFFERED
