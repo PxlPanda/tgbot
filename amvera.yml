@@ -1,4 +1,13 @@
 meta:
-  environment: docker
+  environment: python
+  toolchain:
+    name: pip
+    version: "3.12"
 build:
-  dockerfile: Dockerfile
+  requirementsPath: requirements.txt
+run:
+  scriptName: quest_bot.py
+  containerPort: 80
+  env:
+    - name: PYTHONUNBUFFERED
+      value: "1"
