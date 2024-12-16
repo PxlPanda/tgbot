@@ -2,10 +2,8 @@ FROM python:3.12-slim
 
 WORKDIR /app
 
-COPY requirements.txt .
-RUN pip install -r requirements.txt
+COPY . /app/
 
-COPY quest_bot.py .
-COPY config.json .
+RUN pip install -r requirements.txt
 
 CMD ["python", "quest_bot.py"]

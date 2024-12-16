@@ -1,9 +1,10 @@
 meta:
-  environment: python
+  environment: docker
   toolchain:
     name: pip
     version: "3.12"
 build:
+  dockerfile: Dockerfile
   requirementsPath: requirements.txt
   artifacts:
     - source: quest_bot.py
