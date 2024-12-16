@@ -7,4 +7,4 @@ build:
   requirementsPath: requirements.txt
 run:
   persistenceMount: /ngbot/config.json
-  scriptName: ngbot/py quest_bot.py
+  scriptName: ngbot/quest_bot.py
