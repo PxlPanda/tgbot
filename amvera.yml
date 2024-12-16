@@ -9,5 +9,6 @@ build:
 
 run:
   scriptName: quest_bot.py
+  command: python quest_bot.py
   persistenceMount: /tgbot/config.json
   containerPort: 80
