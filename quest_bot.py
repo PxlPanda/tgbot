@@ -5,6 +5,8 @@ import json
 import os
 from datetime import datetime
 import pytz
+import fcntl
+import sys
 
 # Константы для состояний
 WAITING_FOR_TASK = 1
@@ -14,6 +16,16 @@ WAITING_FOR_SCHEDULE_TIME = 3
 # Настройка логирования
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+class SingleInstance:
+    def __init__(self):
+        self.lockfile = '/tmp/quest_bot.lock'
+        self.fp = open(self.lockfile, 'w')
+        try:
+            fcntl.lockf(self.fp, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except IOError:
+            print("Another instance is already running. Exiting.")
+            sys.exit(1)
 
 class QuestBot:
     def __init__(self):
@@ -242,6 +254,10 @@ class QuestBot:
 
 def main() -> None:
     print("Script started")
+    
+    # Убеждаемся, что запущен только один экземпляр
+    single_instance = SingleInstance()
+    
     print("Starting bot...")
     try:
         updater = Updater("8135956322:AAEwpxa3g9XujJO6z7RQ-pJqMp-EL7PwjbE", use_context=True)
@@ -259,7 +275,7 @@ def main() -> None:
 
         dp.add_error_handler(error_callback)
 
-        # Добавляем обработчики команд с одним экземпляром бота
+        # Добавляем обработчики команд
         dp.add_handler(CommandHandler("start", quest_bot.start))
         dp.add_handler(CommandHandler("help", quest_bot.help_command))
         dp.add_handler(CommandHandler("list_scheduled", quest_bot.list_scheduled_messages))
@@ -287,7 +303,7 @@ def main() -> None:
         dp.add_handler(MessageHandler(Filters.all & ~Filters.command, quest_bot.handle_player_message))
 
         print("Starting polling...")
-        updater.start_polling()
+        updater.start_polling(clean=True)
         print("Bot is running!")
         updater.idle()
     except Exception as e:
