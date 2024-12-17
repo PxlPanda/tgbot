@@ -28,12 +28,22 @@ class SingleInstance:
             sys.exit(1)
 
 class QuestBot:
+    _instance = None
+
+    def __new__(cls):
+        if cls._instance is None:
+            cls._instance = super(QuestBot, cls).__new__(cls)
+            cls._instance.initialized = False
+        return cls._instance
+
     def __init__(self):
-        self.config = self.load_config()
-        self.admin_id = self.config.get('admin_id')
-        self.player_id = self.config.get('player_id')
-        self.scheduled_messages = self.config.get('scheduled_messages', [])
-        
+        if not self.initialized:
+            self.config = self.load_config()
+            self.admin_id = self.config.get('admin_id')
+            self.player_id = self.config.get('player_id')
+            self.scheduled_messages = self.config.get('scheduled_messages', [])
+            self.initialized = True
+    
     def load_config(self):
         config_path = 'config.json'
         if os.path.exists(config_path):
@@ -76,7 +86,10 @@ class QuestBot:
             update.message.reply_text("Извините, этот бот предназначен только для одного игрока.")
 
     def help_command(self, update: Update, context: CallbackContext) -> None:
-        if update.effective_user.id == self.admin_id:
+        user_id = update.effective_user.id
+        admin_id = int(self.admin_id) if isinstance(self.admin_id, str) else self.admin_id
+        
+        if user_id == admin_id:
             help_text = """
 Доступные команды:
 /send_task - Отправить новое задание игроку
