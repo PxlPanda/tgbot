@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 # Конфигурация бота
 BOT_CONFIG = {
-    'admin_id': 934993954,
+    'admin_id': None,
     'player_id': None,
     'scheduled_messages': []
 }
