@@ -11,4 +11,3 @@ build:
 run:
   containerPort: "80"
   scriptName: tgbot/quest_bot.py
-  persistenceMount: tgbot/config.json
