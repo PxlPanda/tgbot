@@ -6,8 +6,6 @@ meta:
 build:
   requirementsPath: requirements.txt
 run:
-  scriptName: quest_bot.py
-  containerPort: 80
-  env:
-    - name: PYTHONUNBUFFERED
-      value: "1"
+  persistenceMount: /data
+  containerPort: "80"
+  scriptName: tgbot/quest_bot.py
