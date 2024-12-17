@@ -18,6 +18,13 @@ WAITING_FOR_SCHEDULE_TIME = 3
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# Конфигурация бота
+BOT_CONFIG = {
+    'admin_id': 934993954,
+    'player_id': None,
+    'scheduled_messages': []
+}
+
 class SingleInstance:
     def __init__(self):
         self.lockfile = os.path.join(tempfile.gettempdir(), 'quest_bot.lock')
@@ -63,72 +70,47 @@ class SingleInstance:
 
 class QuestBot:
     _instance = None
+    _scheduled_messages = BOT_CONFIG['scheduled_messages']
+    _player_id = BOT_CONFIG['player_id']
+    _admin_id = BOT_CONFIG['admin_id']
 
     def __new__(cls):
         if cls._instance is None:
             cls._instance = super(QuestBot, cls).__new__(cls)
-            cls._instance.initialized = False
         return cls._instance
 
     def __init__(self):
-        if not self.initialized:
-            self.config = self.load_config()
-            self.admin_id = self.config.get('admin_id')
-            self.player_id = self.config.get('player_id')
-            self.scheduled_messages = self.config.get('scheduled_messages', [])
-            self.initialized = True
-    
-    def load_config(self):
-        config_paths = [
-            'config.json',
-            'tgbot/config.json',
-            os.path.join(os.path.dirname(__file__), 'config.json')
-        ]
-        
-        for config_path in config_paths:
-            if os.path.exists(config_path):
-                try:
-                    with open(config_path, 'r') as f:
-                        config = json.load(f)
-                    logger.info(f"Loaded config from {config_path}: {config}")
-                    return config
-                except Exception as e:
-                    logger.error(f"Error loading config from {config_path}: {e}")
-                    continue
-        
-        logger.error(f"Config file not found in any of these locations: {[os.path.abspath(p) for p in config_paths]}")
-        return {}
-    
-    def save_config(self):
-        config_path = os.path.join(os.path.dirname(__file__), 'config.json')
-        with open(config_path, 'w') as f:
-            json.dump({
-                'admin_id': self.admin_id,
-                'player_id': self.player_id,
-                'scheduled_messages': self.scheduled_messages
-            }, f, indent=4)
-    
+        pass
+
+    @property
+    def admin_id(self):
+        return self._admin_id
+
+    @property
+    def player_id(self):
+        return self._player_id
+
+    @player_id.setter
+    def player_id(self, value):
+        self._player_id = value
+        BOT_CONFIG['player_id'] = value
+
+    @property
+    def scheduled_messages(self):
+        return self._scheduled_messages
+
     def start(self, update: Update, context: CallbackContext) -> None:
         user_id = update.effective_user.id
         
-        if not self.admin_id:
-            self.admin_id = user_id
-            self.save_config()
-            update.message.reply_text("Вы зарегистрированы как администратор! Используйте /help для просмотра команд.")
-            return
-
-        if not self.player_id and user_id != self.admin_id:
+        if user_id == self.admin_id:
+            update.message.reply_text("Вы администратор квеста. Используйте /help для просмотра команд.")
+        elif not self.player_id:
             self.player_id = user_id
-            self.save_config()
             update.message.reply_text("Добро пожаловать в квест! Ждите задание от хозяина игры.")
             context.bot.send_message(
                 self.admin_id,
                 f"Игрок присоединился к квесту! Используйте /send_task для отправки задания."
             )
-            return
-
-        if user_id == self.admin_id:
-            update.message.reply_text("Вы администратор квеста. Используйте /help для просмотра команд.")
         elif user_id == self.player_id:
             update.message.reply_text("Добро пожаловать обратно в квест!")
         else:
@@ -136,28 +118,19 @@ class QuestBot:
 
     def help_command(self, update: Update, context: CallbackContext) -> None:
         user_id = update.effective_user.id
-        logger.info(f"Help command called by user {user_id}, admin_id from config: {self.admin_id} (type: {type(self.admin_id)})")
         
-        try:
-            admin_id = int(self.admin_id) if isinstance(self.admin_id, str) else self.admin_id
-            logger.info(f"Converted admin_id: {admin_id} (type: {type(admin_id)})")
-            
-            if user_id == admin_id:
-                help_text = """
+        if user_id == self.admin_id:
+            help_text = """
 Доступные команды:
 /send_task - Отправить новое задание игроку
 /schedule_message - Запланировать сообщение на определенное время
 /list_scheduled - Показать список запланированных сообщений
 /cancel_scheduled <id> - Отменить запланированное сообщение
 /help - Показать это сообщение
-                """
-                update.message.reply_text(help_text)
-            else:
-                logger.info(f"User {user_id} != admin {admin_id}, comparison result: {user_id == admin_id}")
-                update.message.reply_text("Ждите заданий от администратора!")
-        except Exception as e:
-            logger.error(f"Error in help_command: {e}")
-            update.message.reply_text("Произошла ошибка при обработке команды")
+            """
+            update.message.reply_text(help_text)
+        else:
+            update.message.reply_text("Ждите заданий от администратора!")
 
     def send_task(self, update: Update, context: CallbackContext) -> int:
         if update.effective_user.id != self.admin_id:
@@ -217,7 +190,7 @@ class QuestBot:
             }
             
             self.scheduled_messages.append(scheduled_message)
-            self.save_config()
+            BOT_CONFIG['scheduled_messages'] = self.scheduled_messages
 
             # Планируем отправку сообщения
             context.job_queue.run_once(
@@ -253,7 +226,7 @@ class QuestBot:
                     )
                     # Отмечаем сообщение как отправленное
                     message['sent'] = True
-                    self.save_config()
+                    BOT_CONFIG['scheduled_messages'] = self.scheduled_messages
                     
                     # Уведомляем админа
                     context.bot.send_message(
@@ -289,7 +262,7 @@ class QuestBot:
             for msg in self.scheduled_messages:
                 if msg['id'] == message_id and not msg['sent']:
                     msg['sent'] = True
-                    self.save_config()
+                    BOT_CONFIG['scheduled_messages'] = self.scheduled_messages
                     update.message.reply_text(f"Сообщение с ID {message_id} отменено")
                     return
             update.message.reply_text("Сообщение не найдено или уже отправлено")
@@ -373,7 +346,7 @@ def main() -> None:
         dp.add_handler(MessageHandler(Filters.all & ~Filters.command, quest_bot.handle_player_message))
 
         print("Starting polling...")
-        updater.start_polling(drop_pending_updates=True)
+        updater.start_polling(clean=True)
         print("Bot is running!")
         updater.idle()
     except Exception as e:
