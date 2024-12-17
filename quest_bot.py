@@ -7,7 +7,7 @@ from datetime import datetime
 import pytz
 import sys
 import tempfile
-import msvcrt
+import atexit
 
 # Константы для состояний
 WAITING_FOR_TASK = 1
@@ -21,31 +21,45 @@ logger = logging.getLogger(__name__)
 class SingleInstance:
     def __init__(self):
         self.lockfile = os.path.join(tempfile.gettempdir(), 'quest_bot.lock')
+        self.cleanup_lock()
+        
         try:
-            # Пытаемся создать и открыть файл
             if os.path.exists(self.lockfile):
                 # Проверяем, не устарел ли файл блокировки (больше 1 часа)
                 if os.path.getmtime(self.lockfile) < datetime.now().timestamp() - 3600:
                     os.remove(self.lockfile)
                 else:
-                    print("Another instance is already running. Exiting.")
-                    sys.exit(1)
+                    # Проверяем, жив ли процесс
+                    with open(self.lockfile, 'r') as f:
+                        old_pid = int(f.read().strip())
+                    if self.is_process_running(old_pid):
+                        print("Another instance is already running. Exiting.")
+                        sys.exit(1)
+                    else:
+                        os.remove(self.lockfile)
             
-            self.fp = open(self.lockfile, 'w')
-            self.fp.write(str(os.getpid()))
-            self.fp.flush()
-        except IOError:
-            print("Another instance is already running. Exiting.")
+            with open(self.lockfile, 'w') as f:
+                f.write(str(os.getpid()))
+            
+            atexit.register(self.cleanup_lock)
+            
+        except Exception as e:
+            print(f"Error creating lock file: {e}")
             sys.exit(1)
-
-    def __del__(self):
+    
+    def cleanup_lock(self):
         try:
-            if hasattr(self, 'fp'):
-                self.fp.close()
             if os.path.exists(self.lockfile):
                 os.remove(self.lockfile)
         except:
             pass
+    
+    def is_process_running(self, pid):
+        try:
+            os.kill(pid, 0)
+            return True
+        except OSError:
+            return False
 
 class QuestBot:
     _instance = None
