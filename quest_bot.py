@@ -5,8 +5,9 @@ import json
 import os
 from datetime import datetime
 import pytz
-import fcntl
 import sys
+import tempfile
+import msvcrt
 
 # Константы для состояний
 WAITING_FOR_TASK = 1
@@ -19,13 +20,32 @@ logger = logging.getLogger(__name__)
 
 class SingleInstance:
     def __init__(self):
-        self.lockfile = '/tmp/quest_bot.lock'
-        self.fp = open(self.lockfile, 'w')
+        self.lockfile = os.path.join(tempfile.gettempdir(), 'quest_bot.lock')
         try:
-            fcntl.lockf(self.fp, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            # Пытаемся создать и открыть файл
+            if os.path.exists(self.lockfile):
+                # Проверяем, не устарел ли файл блокировки (больше 1 часа)
+                if os.path.getmtime(self.lockfile) < datetime.now().timestamp() - 3600:
+                    os.remove(self.lockfile)
+                else:
+                    print("Another instance is already running. Exiting.")
+                    sys.exit(1)
+            
+            self.fp = open(self.lockfile, 'w')
+            self.fp.write(str(os.getpid()))
+            self.fp.flush()
         except IOError:
             print("Another instance is already running. Exiting.")
             sys.exit(1)
+
+    def __del__(self):
+        try:
+            if hasattr(self, 'fp'):
+                self.fp.close()
+            if os.path.exists(self.lockfile):
+                os.remove(self.lockfile)
+        except:
+            pass
 
 class QuestBot:
     _instance = None
