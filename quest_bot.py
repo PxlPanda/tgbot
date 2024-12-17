@@ -79,20 +79,35 @@ class QuestBot:
             self.initialized = True
     
     def load_config(self):
-        config_path = 'config.json'
-        if os.path.exists(config_path):
-            with open(config_path, 'r') as f:
-                return json.load(f)
-        return {'admin_id': None, 'player_id': None, 'scheduled_messages': []}
+        config_paths = [
+            'config.json',
+            'tgbot/config.json',
+            os.path.join(os.path.dirname(__file__), 'config.json')
+        ]
+        
+        for config_path in config_paths:
+            if os.path.exists(config_path):
+                try:
+                    with open(config_path, 'r') as f:
+                        config = json.load(f)
+                    logger.info(f"Loaded config from {config_path}: {config}")
+                    return config
+                except Exception as e:
+                    logger.error(f"Error loading config from {config_path}: {e}")
+                    continue
+        
+        logger.error(f"Config file not found in any of these locations: {[os.path.abspath(p) for p in config_paths]}")
+        return {}
     
     def save_config(self):
-        with open('config.json', 'w') as f:
+        config_path = os.path.join(os.path.dirname(__file__), 'config.json')
+        with open(config_path, 'w') as f:
             json.dump({
                 'admin_id': self.admin_id,
                 'player_id': self.player_id,
                 'scheduled_messages': self.scheduled_messages
-            }, f)
-
+            }, f, indent=4)
+    
     def start(self, update: Update, context: CallbackContext) -> None:
         user_id = update.effective_user.id
         
@@ -121,20 +136,28 @@ class QuestBot:
 
     def help_command(self, update: Update, context: CallbackContext) -> None:
         user_id = update.effective_user.id
-        admin_id = int(self.admin_id) if isinstance(self.admin_id, str) else self.admin_id
+        logger.info(f"Help command called by user {user_id}, admin_id from config: {self.admin_id} (type: {type(self.admin_id)})")
         
-        if user_id == admin_id:
-            help_text = """
+        try:
+            admin_id = int(self.admin_id) if isinstance(self.admin_id, str) else self.admin_id
+            logger.info(f"Converted admin_id: {admin_id} (type: {type(admin_id)})")
+            
+            if user_id == admin_id:
+                help_text = """
 Доступные команды:
 /send_task - Отправить новое задание игроку
 /schedule_message - Запланировать сообщение на определенное время
 /list_scheduled - Показать список запланированных сообщений
 /cancel_scheduled <id> - Отменить запланированное сообщение
 /help - Показать это сообщение
-            """
-            update.message.reply_text(help_text)
-        else:
-            update.message.reply_text("Ждите заданий от администратора!")
+                """
+                update.message.reply_text(help_text)
+            else:
+                logger.info(f"User {user_id} != admin {admin_id}, comparison result: {user_id == admin_id}")
+                update.message.reply_text("Ждите заданий от администратора!")
+        except Exception as e:
+            logger.error(f"Error in help_command: {e}")
+            update.message.reply_text("Произошла ошибка при обработке команды")
 
     def send_task(self, update: Update, context: CallbackContext) -> int:
         if update.effective_user.id != self.admin_id:
@@ -350,7 +373,7 @@ def main() -> None:
         dp.add_handler(MessageHandler(Filters.all & ~Filters.command, quest_bot.handle_player_message))
 
         print("Starting polling...")
-        updater.start_polling(clean=True)
+        updater.start_polling(drop_pending_updates=True)
         print("Bot is running!")
         updater.idle()
     except Exception as e:

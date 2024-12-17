@@ -5,7 +5,10 @@ meta:
     version: "3.8"
 build:
   requirementsPath: tgbot/requirements.txt
+  files:
+    - source: tgbot/config.json
+      destination: tgbot/config.json
 run:
-  persistenceMount: /data
   containerPort: "80"
   scriptName: tgbot/quest_bot.py
+  persistenceMount: tgbot/config.json
